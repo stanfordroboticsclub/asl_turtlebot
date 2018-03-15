@@ -143,6 +143,7 @@ class Navigator:
             return
 
         # makes sure we have a map
+        # print(self.occupancy)
         if not self.occupancy:
             self.current_plan = []
             return
@@ -171,6 +172,7 @@ class Navigator:
             problem = AStar(state_min,state_max,x_init,x_goal,self.occupancy,self.plan_resolution)
 
             rospy.loginfo("Navigator: Computing navigation plan")
+            print('about to solve A star')
             if problem.solve():
                 if len(problem.path) > 3:
                     # cubic spline interpolation requires 4 points

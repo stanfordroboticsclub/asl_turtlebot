@@ -12,6 +12,12 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 import math
 
+# NOTE: added these
+STOP_SIGN_WIDTH_WORLD = 6.4 # cm
+STOP_SIGN_HEIGHT_WORLD = 6.4 # cm
+CAT_WIDTH_WORLD = 10 # cm
+CAT_HEIGHT_WORLD = 10 # cm
+
 # path to the trained conv net
 PATH_TO_MODEL = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../tfmodels/ssd_mobilenet_v1_coco.pb')
 PATH_TO_LABELS = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../tfmodels/coco_labels.txt')
@@ -58,10 +64,10 @@ class Detector:
             self.sess = tf.Session(graph=self.detection_graph)
 
         # camera and laser parameters that get updated
-        self.cx = 0.
-        self.cy = 0.
-        self.fx = 1.
-        self.fy = 1.
+        self.u0 = 0.
+        self.v0 = 0.
+        self.alpha = 1.
+        self.beta = 1.
         self.laser_ranges = []
         self.laser_angle_increment = 0.01 # this gets updated
 
@@ -139,13 +145,13 @@ class Detector:
     def project_pixel_to_ray(self,u,v):
         """ takes in a pixel coordinate (u,v) and returns a tuple (x,y,z)
         that is a unit vector in the direction of the pixel, in the camera frame.
-        This function access self.fx, self.fy, self.cx and self.cy """
+        This function access self.alpha, self.beta, self.u0 and self.v0 """
 
         ### YOUR CODE HERE ###
 
-        x = 1 # CHANGE ME
-        y = 0 # CHANGE ME
-        z = 0 # CHANGE ME
+        x = (u - self.u0) / self.alpha
+        y = (v - self.v0) / self.beta
+        z = 1
 
         ### END OF YOUR CODE ###
 
@@ -154,7 +160,6 @@ class Detector:
     def estimate_distance(self, thetaleft, thetaright, ranges):
         """ estimates the distance of an object in between two angles
         using lidar measurements """
-
         leftray_indx = min(max(0,int(thetaleft/self.laser_angle_increment)),len(ranges))
         rightray_indx = min(max(0,int(thetaright/self.laser_angle_increment)),len(ranges))
 
@@ -220,8 +225,9 @@ class Detector:
                 cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (255,0,0), 2)
 
                 # computes the vectors in camera frame corresponding to each sides of the box
-                rayleft = self.project_pixel_to_ray(xmin,ycen)
-                rayright = self.project_pixel_to_ray(xmax,ycen)
+                # NOTE: changed these
+                rayleft = self.project_pixel_to_ray(xmin,ymin)
+                rayright = self.project_pixel_to_ray(xmax,ymax)
 
                 # convert the rays to angles (with 0 poiting forward for the robot)
                 thetaleft = math.atan2(-rayleft[0],rayleft[2])
@@ -232,7 +238,18 @@ class Detector:
                     thetaright += 2.*math.pi
 
                 # estimate the corresponding distance using the lidar
-                dist = self.estimate_distance(thetaleft,thetaright,img_laser_ranges)
+                # NOTE: overwriting lidar function for estimating dist b/c lidar can't see stop sign
+                # dist = self.estimate_distance(thetaleft,thetaright,img_laser_ranges)
+
+                # NOTE: estimating distance from pixels => real world coordinates
+                world_scaling = 0
+                if self.object_labels[cl] == 'cat':
+                    print 'cat'
+                    world_scaling = CAT_HEIGHT_WORLD
+                elif self.object_labels[cl] == 'stop_sign':
+                    print 'stop_sign'
+                    world_scaling = STOP_SIGN_HEIGHT_WORLD
+                dist = world_scaling / np.abs(rayright[1]-rayleft[1])
 
                 if not self.object_publishers.has_key(cl):
                     self.object_publishers[cl] = rospy.Publisher('/detector/'+self.object_labels[cl],
@@ -256,21 +273,19 @@ class Detector:
     def camera_info_callback(self, msg):
         """ extracts relevant camera intrinsic parameters from the camera_info message.
         cx, cy are the center of the image in pixel (the principal point), fx and fy are
-        the focal lengths. Stores the result in the class itself as self.cx, self.cy,
-        self.fx and self.fy """
+        the focal lengths. Stores the result in the class itself as self.u0, self.v0,
+        self.alpha and self.beta """
 
         ### YOUR CODE HERE ###
-
-        self.cx = 0 # CHANGE ME
-        self.cy = 0 # CHANGE ME
-        self.fx = 1 # CHANGE ME
-        self.fy = 1 # CHANGE ME
+        self.u0 = msg.K[2] # u0
+        self.v0 = msg.K[5] # v0
+        self.alpha = msg.K[0] # alpha
+        self.beta = msg.K[4] # beta
 
         ### END OF YOUR CODE ###
 
     def laser_callback(self, msg):
         """ callback for thr laser rangefinder """
-
         self.laser_ranges = msg.ranges
         self.laser_angle_increment = msg.angle_increment
 
