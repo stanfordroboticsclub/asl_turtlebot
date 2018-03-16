@@ -165,8 +165,8 @@ class Supervisor:
         theta_animal = (msg.thetaleft + msg.thetaright)/2.0
 
         animal_theta = self.theta + theta_animal
-        animal_x = self.x + 20.0*np.cos(animal_theta)
-        animal_y = self.y + 20.0*np.sin(animal_theta)
+        animal_x = self.x + 0.2*np.cos(animal_theta)
+        animal_y = self.y + 0.2*np.sin(animal_theta)
         
         if self.not_close_to_other_animals(animal_x, animal_y) and self.state == State.EXPLORE:
 
@@ -292,7 +292,8 @@ class Supervisor:
             if self.has_stopped():
                 self.init_crossing()
             else:
-                pass
+                self.stay_idle()
+
         elif self.mode == Mode.STOP_INTERMEDIATE:
 
             if self.close_to(self.x_g,self.y_g,self.theta_g):
