@@ -81,7 +81,7 @@ class Supervisor:
         self.animal_index = 0
         self.NUM_ANIMALS = 3 # Boolean indicating whether we should rescure or not 
         self.pre_explore_index = -1
-        self.ANIMAL_DIST_THRESH = 400 # it is the distance squared in centimeters
+        self.ANIMAL_DIST_THRESH = 0.004 # it is the distance squared in centimeters
 
         rospy.Subscriber('/detector/stop_sign', DetectedObject, self.stop_sign_detected_callback)
        
@@ -223,7 +223,7 @@ class Supervisor:
     def not_close_to_other_animals(self, x, y):
         """ checks if the robot is at a pose within some threshold """
         for animal_pos in self.animal_positions:
-            
+            print (animal_pos[0] - x)**2 + (animal_pos[1] -y)**2
             if ((animal_pos[0] - x)**2 + (animal_pos[1] -y)**2) < self.ANIMAL_DIST_THRESH:
                 return False
 
