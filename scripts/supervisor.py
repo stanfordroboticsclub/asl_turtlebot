@@ -337,4 +337,3 @@ class Supervisor:
                 # Done going through waypoints
                 if self.pre_explore_index >= len(pre_explore_waypoints):
                     print '---------------- PRE_EXPLORE: done exploring' 
-   ...
