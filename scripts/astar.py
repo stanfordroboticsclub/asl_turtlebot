@@ -140,7 +140,7 @@ class AStar(object):
     # OUTPUT: Boolean, True if a solution from x_init to x_goal was found
     def solve(self):
         print 'SOLVE'
-        self.open_set.add(self.x_init)
+        self.open_set.append(self.x_init)
         min_dist = np.inf
         closest_reachable = None
 
