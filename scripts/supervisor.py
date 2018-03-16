@@ -375,20 +375,24 @@ class Supervisor:
 
         elif self.state == State.RESCUE:
 
-            print "RESCUING"
+            # print "RESCUING"
+            print "State:, ", self.state
             if self.close_to(self.x_g,self.y_g,self.theta_g):
                 self.animal_index += 1 
-                print "Animal Index:", self.animal_index, len(self.animal_positions)
+                print "Animal Index:", self.animal_index, len(self.animal_positions), self.NUM_ANIMALS
+
                 if self.animal_index >= self.NUM_ANIMALS:
                     self.x_g = 0
                     self.y_g = 0
                     self.theta_g = 0                  
-                    self.state == State.HOME               
+                    self.state = State.HOME               
                 else:
                     self.x_g = self.animal_positions[self.animal_index][0]
                     self.y_g = self.animal_positions[self.animal_index][1]
                     self.theta_g = self.animal_positions[self.animal_index][2]
                     self.mode = Mode.NAV
+            elif self.animal_index >= self.NUM_ANIMALS:
+                self.state = State.HOME
 
         elif self.state == State.HOME:
 
