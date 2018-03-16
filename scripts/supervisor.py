@@ -129,7 +129,7 @@ class Supervisor:
 
         # if close enough and in nav mode, stop
         if dist > 0 and dist < STOP_MIN_DIST and self.mode == Mode.NAV:
-            # self.mode = Mode.STOP_INTERMEDIATE
+            self.mode = Mode.STOP_INTERMEDIATE
             self.x_og_g = self.x_g
             self.y_og_g = self.y_g
             self.theta_og_g = self.theta_g
