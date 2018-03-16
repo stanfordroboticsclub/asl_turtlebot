@@ -20,7 +20,7 @@ class AStar(object):
         self.g_score = {}       # dictionary of the g score (cost-to-go from start to state)
         self.came_from = {}     # dictionary keeping track of each state's parent to reconstruct the path
 
-        self.open_set.add(x_init)
+        self.open_set.append(x_init)
         self.g_score[x_init] = 0
         self.f_score[x_init] = self.distance(x_init,x_goal)
 
