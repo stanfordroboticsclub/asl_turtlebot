@@ -176,7 +176,7 @@ class Supervisor:
                                     tf.transformations.quaternion_from_euler(0, 0, self.theta), 
                                     rospy.Time.now(), '/animal_frame', '/map')
 
-            print "Recorded New Animal"
+            print "Recorded New Animal", msg.name
             print "Animal Positions: ", self.animal_positions
             
         print "Recorded animal"
