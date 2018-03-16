@@ -15,7 +15,7 @@ POS_EPS = .1
 THETA_EPS = .6
 
 # time to stop at a stop sign
-STOP_TIME = 6000
+STOP_TIME = 60
 
 # minimum distance from a stop sign to obey it
 STOP_MIN_DIST = .5
