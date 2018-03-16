@@ -414,14 +414,14 @@ class Supervisor:
 
         elif self.state == State.CELEBRATION:
             oldTh = self.theta_g
-            self.theta_g = np.pi + self.sign_celebration*oldTh
+            self.theta_g = 0.04*np.pi + self.sign_celebration*oldTh
             pose_g_msg = Pose2D()
             pose_g_msg.x = self.x_g
             pose_g_msg.y = self.y_g
             pose_g_msg.theta = self.theta_g
             self.pose_goal_publisher.publish(pose_g_msg)
             self.counter = self.counter + np.random.randint(5)
-            if self.counter >= 500:
+            if self.counter >= 5000:
                 if self.sign_celebration == 1:
                     self.sign_celebration = -1
                 else:
