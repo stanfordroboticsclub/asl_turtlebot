@@ -162,9 +162,9 @@ class Supervisor:
 
     def animal_detected_callback(self, msg):
 
-        theta_animal = (msg.thetaleft + msg.thetaright)/2.0
+        #theta_animal = (msg.thetaleft + msg.thetaright)/2.0
 
-        animal_theta = self.theta + theta_animal
+        animal_theta = self.theta
         animal_x = self.x + 0.2*np.cos(animal_theta)
         animal_y = self.y + 0.2*np.sin(animal_theta)
         
@@ -177,6 +177,7 @@ class Supervisor:
                                     rospy.Time.now(), '/animal_frame', '/map')
 
             print "Recorded New Animal", msg.name
+            print "Current position:", self.x, self.y, self.theta
             print "Animal Positions: ", self.animal_positions
             
         print "Recorded animal"
