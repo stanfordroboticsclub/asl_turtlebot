@@ -378,6 +378,7 @@ class Supervisor:
             print "RESCUING"
             if self.close_to(self.x_g,self.y_g,self.theta_g):
                 self.animal_index += 1 
+                print "Animal Index:", self.animal_index
                 if self.animal_index >= len(self.animal_positions):
                     self.x_g = 0
                     self.y_g = 0
