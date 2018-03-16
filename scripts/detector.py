@@ -29,6 +29,7 @@ USE_TF = True
 MIN_SCORE = .5
 
 ANIMAL_LABELS = set(['cat', 'bird', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe'])
+CV2_FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 def load_object_labels(filename):
     """ loads the coco object readable name """
@@ -245,22 +246,24 @@ class Detector:
 
                 # NOTE: estimating distance from pixels => real world coordinates
                 world_scaling = 0
+                draw_color = (255,0,0)
                 # Cat
                 if self.object_labels[cl] == 'cat':
                     print self.object_labels[cl]
                     world_scaling = CAT_HEIGHT_WORLD
-                    cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (0,255,0), 2)
+                    draw_color = (0,255,0)
                 # Stop sign
                 elif self.object_labels[cl] == 'stop_sign':
-                    cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (0,0,255), 2)
+                    draw_color = (0,0,255)
                     print 'stop sign:', dist
                     world_scaling = STOP_SIGN_HEIGHT_WORLD
                 # Any other animal
                 elif self.object_labels[cl] in ANIMAL_LABELS:
-                    cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (0,255,0), 2)
-                # Any other object
-                else:
-                    cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (255,0,0), 2)
+                    draw_color = (0,255,0)
+                
+                # Draw bounding box and text
+                cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), draw_color, 2)
+                cv2.putText(img_bgr8, self.object_labels[cl], (xmin, ymin), font, .5, draw_color)
 
                 # Distance estimate
                 dist = world_scaling / np.abs(rayright[1]-rayleft[1])
