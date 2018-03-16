@@ -302,8 +302,11 @@ class Supervisor:
                 self.y_g = self.y_og_g
                 self.theta_g = self.theta_og_g
                 self.mode = Mode.STOP
-            else:
+            elif ((self.x - self.x_g)**2 + (self.y - self.y_g)**2)< 0.04:
                 self.go_to_pose()
+            else:
+                self.nav_to_pose()
+
         elif self.mode == Mode.CROSS:
             # crossing an intersection
             if self.has_crossed():
