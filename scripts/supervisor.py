@@ -373,7 +373,7 @@ class Supervisor:
 
         elif self.state == State.RESCUE:
 
-
+            print "RESCUING"
             if self.close_to(self.x_g,self.y_g,self.theta_g):
                 self.animal_index += 1 
                 if self.animal_index >= len(self.animal_positions):
