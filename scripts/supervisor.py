@@ -71,6 +71,8 @@ class Supervisor:
         self.state = State.EXPLORE
         self.last_mode_printed = None
 
+	self.stop_sign_start = rospy.get_rostime()
+
         self.nav_goal_publisher = rospy.Publisher('/cmd_nav', Pose2D, queue_size=10)
         self.pose_goal_publisher = rospy.Publisher('/cmd_pose', Pose2D, queue_size=10)
         self.cmd_vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
@@ -123,7 +125,7 @@ class Supervisor:
 
         # distance of the stop sign
 
-        dist = msg.distance
+        dist = msg.distance/100.0
         theta_sign = (msg.thetaleft + msg.thetaright)/2.0
         print "STOP SIGN "
 
@@ -136,12 +138,12 @@ class Supervisor:
             delta_d = np.abs(dist*np.cos(theta_sign))
             theta_sign = theta_sign + self.theta
 
-            if np.abs(theta_sign) < np.radians(30): #facing forward
+            if np.abs(self.theta) < np.radians(30): #facing forward
                 self.x_g = self.x + delta_d
                 self.y_g = self.y
                 self.theta_g = 0
 
-            elif np.abs(theta_sign) > np.radians(150): #facing back
+            elif np.abs(self.theta) > np.radians(150): #facing back
                 self.x_g = self.x - delta_d
                 self.y_g = self.y
                 self.theta_g = -np.pi
@@ -155,6 +157,7 @@ class Supervisor:
                 self.x_g = self.x
                 self.y_g = self.y - delta_d
                 self.theta_g = -np.pi/2
+	    print 'x_g:', self.x_g, '\t y_g', self.y_g, '\t theta_g', self.theta_g
 
 
     def animal_detected_callback(self, msg):
@@ -175,7 +178,7 @@ class Supervisor:
             
         
 
-        print "Recorded Animal"
+        print "Recorded Animal:", msg.name
 
 
     def rescue_on_callback(self, msg):
@@ -294,7 +297,7 @@ class Supervisor:
 
             if self.close_to(self.x_g,self.y_g,self.theta_g):
                 self.x_g = self.x_og_g
-                self.y_g = self,y_og_g
+                self.y_g = self.y_og_g
                 self.theta_g = self.theta_og_g
                 self.mode = Mode.STOP
             else:
