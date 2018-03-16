@@ -81,7 +81,7 @@ class Supervisor:
 
         self.animal_positions = [] # Animal positions is a list of tuples
         self.animal_index = 0
-        self.NUM_ANIMALS = 1 # Boolean indicating whether we should rescure or not 
+        self.NUM_ANIMALS = 3 # Boolean indicating whether we should rescure or not 
         self.pre_explore_index = -1
         self.ANIMAL_DIST_THRESH = 0.04 # it is the distance squared in centimeters
 
@@ -188,18 +188,14 @@ class Supervisor:
         print "Recorded animal"
 
     def rescue_on_callback(self, msg):
+        
         if self.state == State.PICKUP and self.rescue_bool:
             self.x_g = self.animal_positions[0][0]
             self.y_g = self.animal_positions[0][1]
             self.theta_g = self.animal_positions[0][2]
             self.state = State.RESCUE
             self.mode = Mode.NAV
-        elif self.state == State.EXPLORE and len(self.animal_positions) >= self.NUM_ANIMALS:
-            self.x_g = 0
-            self.y_g = 0
-            self.theta_g = 0
-            self.state = State.PICKUP
-            self.mode = Mode.NAV
+
 
     def go_to_pose(self):
         """ sends the current desired pose to the pose controller """
@@ -366,12 +362,12 @@ class Supervisor:
 
         elif self.state == State.EXPLORE:
             pass
-            # if len(self.animal_positions) == self.NUM_ANIMALS:
-            #     self.state = State.PICKUP
-            #     self.x_g = 0
-            #     self.y_g = 0
-            #     self.theta_g = 0
-            #     self.mode = Mode.NAV
+            if len(self.animal_positions) == self.NUM_ANIMALS:
+                self.state = State.PICKUP
+                self.x_g = 0
+                self.y_g = 0
+                self.theta_g = 0
+                self.mode = Mode.NAV
 
         elif self.state == State.PICKUP:
 
