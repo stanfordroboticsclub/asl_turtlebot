@@ -384,7 +384,8 @@ class Supervisor:
                 if self.animal_index >= self.NUM_ANIMALS:
                     self.x_g = 0
                     self.y_g = 0
-                    self.theta_g = 0                  
+                    self.theta_g = 0
+                    self.mode = Mode.NAV                  
                     self.state = State.HOME               
                 else:
                     self.x_g = self.animal_positions[self.animal_index][0]
@@ -392,7 +393,11 @@ class Supervisor:
                     self.theta_g = self.animal_positions[self.animal_index][2]
                     self.mode = Mode.NAV
             elif self.animal_index >= self.NUM_ANIMALS:
-                self.state = State.HOME
+                self.x_g = 0
+                self.y_g = 0
+                self.theta_g = 0
+                self.mode = Mode.NAV                  
+                self.state = State.HOME  
 
         elif self.state == State.HOME:
 
