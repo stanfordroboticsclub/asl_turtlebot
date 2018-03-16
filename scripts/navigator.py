@@ -29,7 +29,7 @@ THETA_START_THRESH = 0.09
 THETA_START_P = 1
 
 # maximum velocity
-V_MAX = .15
+V_MAX = .1
 
 # maximim angular velocity
 W_MAX = .4
