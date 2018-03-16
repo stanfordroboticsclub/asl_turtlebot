@@ -111,7 +111,7 @@ class Navigator:
                                                   self.map_height,
                                                   self.map_origin[0],
                                                   self.map_origin[1],
-                                                  8,
+                                                  5,
                                                   self.map_probs)
             self.occupancy_updated = True
 
