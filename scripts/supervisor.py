@@ -383,7 +383,7 @@ class Supervisor:
                     self.x_g = 0
                     self.y_g = 0
                     self.theta_g = 0                  
-                    self.mode == State.HOME               
+                    self.state == State.HOME               
                 else:
                     self.x_g = self.animal_positions[self.animal_index][0]
                     self.y_g = self.animal_positions[self.animal_index][1]
