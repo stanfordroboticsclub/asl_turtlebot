@@ -337,3 +337,87 @@ class Supervisor:
                 # Done going through waypoints
                 if self.pre_explore_index >= len(pre_explore_waypoints):
                     print '---------------- PRE_EXPLORE: done exploring' 
+                    self.state = State.EXPLORE
+
+                # Done going to current waypoint, go to next one
+                else:
+                    print '---------------- PRE_EXPLORE: index', self.pre_explore_index, 'waypoint', pre_explore_waypoints[self.pre_explore_index]
+                    self.x_g, self.y_g, self.theta_g = pre_explore_waypoints[self.pre_explore_index]
+                    self.mode = Mode.NAV
+
+        elif self.state == State.EXPLORE:
+
+            if len(self.animal_positions) == self.NUM_ANIMALS:
+                self.state = State.PICKUP
+                self.x_g = 0
+                self.y_g = 0
+                self.theta_g = 0
+                self.mode = Mode.NAV
+
+        elif self.state == State.PICKUP:
+
+            if self.mode == Mode.IDLE:
+
+                self.rescue_bool = True
+                rospy.loginfo(self.rescue_bool)
+                self.rescue_pub.publish(self.rescue_bool)
+
+
+        elif self.state == State.RESCUE:
+
+
+            if self.close_to(self.x_g,self.y_g,self.theta_g):
+                self.animal_index += 1 
+                if self.animal_index >= len(self.animal_positions):
+                    self.x_g = 0
+                    self.y_g = 0
+                    self.theta_g = 0                  
+                    self.mode == Mode.HOME               
+                else:
+                    self.x_g = self.animal_positions[self.animal_index][0]
+                    self.y_g = self.animal_positions[self.animal_index][1]
+                    self.theta_g = self.animal_positions[self.animal_index][2]
+                    self.mode = Mode.NAV
+
+        elif self.state == State.HOME:
+
+            if self.close_to(self.x_g,self.y_g,self.theta_g):
+                
+                self.state = State.CELEBRATION
+                self.x_g = 0
+                self.y_g = 0
+                self.theta_g = 0
+                self.mode = Mode.NAV
+
+        elif self.state == State.CELEBRATION:
+            oldTh = self.theta_g
+            self.theta_g = np.pi + oldTh
+            pose_g_msg = Pose2D()
+            pose_g_msg.x = self.x_g
+            pose_g_msg.y = self.y_g
+            pose_g_msg.theta = self.theta_g
+            self.pose_goal_publisher.publish(pose_g_msg)
+            time.sleep(random.randint(1, 5))
+            oldTh = self.theta_g
+            self.theta_g = oldTh - np.pi
+            pose_g_msg = Pose2D()
+            pose_g_msg.x = self.x_g
+            pose_g_msg.y = self.y_g
+            pose_g_msg.theta = self.theta_g
+            self.pose_goal_publisher.publish(pose_g_msg)
+            time.sleep(random.randint(1, 5))
+
+        else:
+            raise Exception('This state is not supported: %s'
+                % str(self.state))
+
+
+    def run(self):
+        rate = rospy.Rate(10) # 10 Hz
+        while not rospy.is_shutdown():
+            self.loop()
+            rate.sleep()
+
+if __name__ == '__main__':
+    sup = Supervisor()
+    sup.run()
