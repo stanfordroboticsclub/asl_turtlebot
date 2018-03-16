@@ -71,7 +71,7 @@ class Supervisor:
         self.state = State.EXPLORE
         self.last_mode_printed = None
 
-	self.stop_sign_start = rospy.get_rostime()
+    	self.stop_sign_start = rospy.get_rostime()
 
         self.nav_goal_publisher = rospy.Publisher('/cmd_nav', Pose2D, queue_size=10)
         self.pose_goal_publisher = rospy.Publisher('/cmd_pose', Pose2D, queue_size=10)
