@@ -255,7 +255,6 @@ class Detector:
                 # Stop sign
                 elif self.object_labels[cl] == 'stop_sign':
                     draw_color = (0,0,255)
-                    print 'stop sign:', dist
                     world_scaling = STOP_SIGN_HEIGHT_WORLD
                 # Any other animal
                 elif self.object_labels[cl] in ANIMAL_LABELS:
@@ -263,10 +262,13 @@ class Detector:
                 
                 # Draw bounding box and text
                 cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), draw_color, 2)
-                cv2.putText(img_bgr8, self.object_labels[cl], (xmin, ymin), font, .5, draw_color)
+                cv2.putText(img_bgr8, self.object_labels[cl], (xmin, ymin-10), CV2_FONT, .5, draw_color)
 
                 # Distance estimate
                 dist = world_scaling / np.abs(rayright[1]-rayleft[1])
+
+                if self.object_labels[cl] == 'stop_sign':
+                    print 'stop sign:', dist
 
                 if not self.object_publishers.has_key(cl):
                     self.object_publishers[cl] = rospy.Publisher('/detector/'+self.object_labels[cl],
