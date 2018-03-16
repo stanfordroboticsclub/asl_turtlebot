@@ -77,6 +77,8 @@ class Supervisor:
         self.pose_goal_publisher = rospy.Publisher('/cmd_pose', Pose2D, queue_size=10)
         self.cmd_vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
+        self.rescue_bool = False
+
         self.animal_positions = [] # Animal positions is a list of tuples
         self.animal_index = 0
         self.NUM_ANIMALS = 3 # Boolean indicating whether we should rescure or not 
