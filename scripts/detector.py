@@ -247,9 +247,11 @@ class Detector:
                     print 'cat'
                     world_scaling = CAT_HEIGHT_WORLD
                 elif self.object_labels[cl] == 'stop_sign':
-                    print 'stop_sign'
                     world_scaling = STOP_SIGN_HEIGHT_WORLD
                 dist = world_scaling / np.abs(rayright[1]-rayleft[1])
+
+                if self.object_labels[cl] == 'stop_sign':
+                    print 'stop sign:', dist
 
                 if not self.object_publishers.has_key(cl):
                     self.object_publishers[cl] = rospy.Publisher('/detector/'+self.object_labels[cl],
