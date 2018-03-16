@@ -81,7 +81,7 @@ class Supervisor:
         self.animal_index = 0
         self.NUM_ANIMALS = 3 # Boolean indicating whether we should rescure or not 
         self.pre_explore_index = -1
-        self.ANIMAL_DIST_THRESH = 0.004 # it is the distance squared in centimeters
+        self.ANIMAL_DIST_THRESH = 0.04 # it is the distance squared in centimeters
 
         rospy.Subscriber('/detector/stop_sign', DetectedObject, self.stop_sign_detected_callback)
        
