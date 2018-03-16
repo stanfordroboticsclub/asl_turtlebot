@@ -177,6 +177,7 @@ class Supervisor:
                                     rospy.Time.now(), '/animal_frame', '/map')
 
             print "Recorded New Animal", msg.name
+            print "Current position:", self.x, self.y, self.theta
             print "Animal Positions: ", self.animal_positions
             
         print "Recorded animal"
