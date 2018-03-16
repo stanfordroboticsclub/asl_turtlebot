@@ -71,7 +71,7 @@ class Supervisor:
         self.state = State.EXPLORE
         self.last_mode_printed = None
 
-	self.stop_sign_start = rospy.get_rostime()
+    	self.stop_sign_start = rospy.get_rostime()
 
         self.nav_goal_publisher = rospy.Publisher('/cmd_nav', Pose2D, queue_size=10)
         self.pose_goal_publisher = rospy.Publisher('/cmd_pose', Pose2D, queue_size=10)
@@ -176,7 +176,7 @@ class Supervisor:
                                     tf.transformations.quaternion_from_euler(0, 0, self.theta), 
                                     rospy.Time.now(), '/animal_frame', '/map')
 
-            print "Recorded New Animal"
+            print "Recorded New Animal", msg.name
             print "Animal Positions: ", self.animal_positions
             
         print "Recorded animal"
