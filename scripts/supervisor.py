@@ -15,7 +15,7 @@ POS_EPS = .1
 THETA_EPS = .6
 
 # time to stop at a stop sign
-STOP_TIME = 3
+STOP_TIME = 6
 
 # minimum distance from a stop sign to obey it
 STOP_MIN_DIST = .5
@@ -175,11 +175,11 @@ class Supervisor:
             self.trans_broadcaster.sendTransform((animal_x, animal_y, 0), 
                                     tf.transformations.quaternion_from_euler(0, 0, self.theta), 
                                     rospy.Time.now(), '/animal_frame', '/map')
+
+            print "Recorded New Animal"
+            print "Animal Positions: ", self.animal_positions
             
-        
-
-        print "Recorded Animal:", msg.name
-
+        print "Recorded animal"
 
     def rescue_on_callback(self, msg):
         if self.state == State.PICKUP and self.rescue_bool:
