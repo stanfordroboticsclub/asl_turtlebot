@@ -85,6 +85,9 @@ class Supervisor:
         self.pre_explore_index = -1
         self.ANIMAL_DIST_THRESH = 0.04 # it is the distance squared in centimeters
 
+        self.sign_celebration = -1
+        self.counter = 0
+
         rospy.Subscriber('/detector/stop_sign', DetectedObject, self.stop_sign_detected_callback)
        
         # All your fav animals
@@ -411,21 +414,19 @@ class Supervisor:
 
         elif self.state == State.CELEBRATION:
             oldTh = self.theta_g
-            self.theta_g = np.pi + oldTh
+            self.theta_g = np.pi + self.sign_celebration*oldTh
             pose_g_msg = Pose2D()
             pose_g_msg.x = self.x_g
             pose_g_msg.y = self.y_g
             pose_g_msg.theta = self.theta_g
             self.pose_goal_publisher.publish(pose_g_msg)
-            time.sleep(random.randint(1, 5))
-            oldTh = self.theta_g
-            self.theta_g = oldTh - np.pi
-            pose_g_msg = Pose2D()
-            pose_g_msg.x = self.x_g
-            pose_g_msg.y = self.y_g
-            pose_g_msg.theta = self.theta_g
-            self.pose_goal_publisher.publish(pose_g_msg)
-            time.sleep(random.randint(1, 5))
+            self.counter = self.counter + random.randint(0, 5)
+            if self.counter >= 200:
+                if self.sign_celebration == 1:
+                    self.sign_celebration = -1
+                else:
+                    self.sign_celebration = 1
+                self.counter = 0
 
         else:
             raise Exception('This state is not supported: %s'
