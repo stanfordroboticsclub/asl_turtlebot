@@ -13,8 +13,8 @@ class AStar(object):
         self.x_init = self.snap_to_grid(x_init)    # initial state
         self.x_goal = self.snap_to_grid(x_goal)    # goal state
 
-        self.closed_set = []    # the set containing the states that have been visited
-        self.open_set = []      # the set containing the states that are condidate for future expension
+        self.closed_set = set()    # the set containing the states that have been visited
+        self.open_set = set()      # the set containing the states that are condidate for future expension
 
         self.f_score = {}       # dictionary of the f score (estimated cost from start to goal passing through state)
         self.g_score = {}       # dictionary of the g score (cost-to-go from start to state)
@@ -32,6 +32,7 @@ class AStar(object):
     #          x - tuple state
     # OUTPUT: Boolean True/False
     def is_free(self, x):
+        # print(x)
         if x==self.x_init or x==self.x_goal:
             return True
         for dim in range(len(x)):
@@ -83,8 +84,8 @@ class AStar(object):
                 tempX = currentX + xVal
                 tempY = currentY + yVal
                 tempTuple = (tempX, tempY)
-                # if(tempX < 0 or tempY < 0 or (xVal == 0 and yVal == 0)):
-                #     continue
+                if(tempX < 0 or tempY < 0 or (xVal == 0 and yVal == 0)):
+                    continue
                 tempTuple = self.snap_to_grid(tempTuple)
                 if(self.is_free(tempTuple)):
                     neighbors.append(tempTuple)
@@ -144,8 +145,8 @@ class AStar(object):
         min_dist = np.inf
         closest_reachable = None
 
-        print "Current Position: ", self.x_init
-        print "goal position:", self.x_goal
+        print 'init', self.x_init
+        print 'goal', self.x_goal
 
         while len(self.open_set)>0:
             currentTuple = self.find_best_f_score()
@@ -158,26 +159,25 @@ class AStar(object):
 
             if(currentTuple == self.x_goal):
                 self.path = self.reconstruct_path(self.x_goal)
+                print 'dONE'
                 return self.path
 
-            self.closed_set.append(currentTuple)
+            self.closed_set.add(currentTuple)
             self.open_set.remove(currentTuple)
-
             neighbors = self.get_neighbors(currentTuple)
             for tempTuple in neighbors:
                 if(tempTuple in self.closed_set):
                     continue
                 tempGScore = self.g_score[currentTuple] + self.distance(currentTuple, tempTuple) 
-                
                 if(not (tempTuple in self.open_set)):
-                    self.open_set.append(tempTuple)
+                    self.open_set.add(tempTuple)
                 elif(tempGScore > self.g_score[tempTuple]):
                     continue
-
                 self.came_from[tempTuple] = currentTuple
                 self.g_score[tempTuple] = tempGScore
                 self.f_score[tempTuple] = tempGScore + self.distance(tempTuple, self.x_goal)
         
+        print 'dONE'
         # return False
         self.path = self.reconstruct_path(closest_reachable)
         return self.path
