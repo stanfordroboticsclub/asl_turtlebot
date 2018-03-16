@@ -186,7 +186,7 @@ class Supervisor:
         if self.state == State.PICKUP and self.rescue_bool:
             self.x_g = self.animal_positions[0][0]
             self.y_g = self.animal_positions[0][1]
-            self.theta_g = self.animal_position[0][2]
+            self.theta_g = self.animal_positions[0][2]
             self.state = State.RESCUE
             self.mode = Mode.NAV
 
