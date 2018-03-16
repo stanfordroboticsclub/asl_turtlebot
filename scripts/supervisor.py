@@ -421,7 +421,7 @@ class Supervisor:
             pose_g_msg.theta = self.theta_g
             self.pose_goal_publisher.publish(pose_g_msg)
             self.counter = self.counter + np.random.randint(5)
-            if self.counter >= 200:
+            if self.counter >= 500:
                 if self.sign_celebration == 1:
                     self.sign_celebration = -1
                 else:
