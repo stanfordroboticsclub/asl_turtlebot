@@ -167,7 +167,7 @@ class Supervisor:
         
         if self.not_close_to_other_animals(animal_x, animal_y) and self.state == State.EXPLORE:
 
-            animal_positions.append((animal_x, animal_y, animal_theta))
+            self.animal_positions.append((animal_x, animal_y, animal_theta))
             '''
             self.trans_broadcaster.sendTransform((animal_x, animal_y, 0), 
                                     tf.transformations.quaternion_from_euler(0, 0, self.theta), 
@@ -181,8 +181,8 @@ class Supervisor:
     def rescue_on_callback(self, msg):
         if self.state == State.PICKUP and self.rescue_bool:
             self.x_g = self.animal_positions[0][0]
-            self.y_g = self.animal_positions[1][0]
-            self.theta_g = self.animal_position[2][0]
+            self.y_g = self.animal_positions[0][1]
+            self.theta_g = self.animal_position[0][2]
             self.state = State.RESCUE
             self.mode = Mode.NAV
 
