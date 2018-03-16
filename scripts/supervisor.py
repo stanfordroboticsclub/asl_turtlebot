@@ -12,7 +12,7 @@ import numpy as np
 
 # threshold at which we consider the robot at a location
 POS_EPS = .1
-THETA_EPS = .3
+THETA_EPS = .6
 
 # time to stop at a stop sign
 STOP_TIME = 3
@@ -31,15 +31,15 @@ class Mode(Enum):
     CROSS = 4
     NAV = 5
     MANUAL = 6
+    STOP_INTERMEDIATE = 7
 
 class State(Enum):
     PRE_EXPLORE = 7
     EXPLORE = 1
     PICKUP = 2
-    RESCUECAT = 3
-    RESCUEDOG = 4
-    HOME = 5
-    CELEBRATION = 6
+    RESCUE = 3
+    HOME = 4
+    CELEBRATION = 5
 
 # pre_explore_waypoints = [(0.3, 0.0, 1.57), (0.2, 0.7, 1.57)]
 pre_explore_waypoints = [(3.2, 1, .7), (3.1, .4, .7), (2.8, .33, 0)]
@@ -75,19 +75,30 @@ class Supervisor:
         self.pose_goal_publisher = rospy.Publisher('/cmd_pose', Pose2D, queue_size=10)
         self.cmd_vel_publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
 
-        self.cat_test = 0
-        self.dog_test = 0
-        self.cat_position = np.array([0, 0, 0])
-        self.rescue_bool = False
-        self.dog_positon = np.copy(self.cat_position)
-
+        self.animal_positions = [] # Animal positions is a list of tuples
+        self.animal_index = 0
+        self.NUM_ANIMALS = 3 # Boolean indicating whether we should rescure or not 
         self.pre_explore_index = -1
+        self.ANIMAL_DIST_THRESH = 400 # it is the distance squared in centimeters
 
         rospy.Subscriber('/detector/stop_sign', DetectedObject, self.stop_sign_detected_callback)
-        rospy.Subscriber('/detector/cat', DetectedObject, self.cat_detected_callback)
-        # rospy.Subscriber('/detector/dog', DetectedObject, self.dog_detected_callback)
+       
+        # All your fav animals
+
+        rospy.Subscriber('/detector/bird', DetectedObject, self.animal_detected_callback)
+        rospy.Subscriber('/detector/cat', DetectedObject, self.animal_detected_callback)
+        rospy.Subscriber('/detector/dog', DetectedObject, self.animal_detected_callback)
+        rospy.Subscriber('/detector/horse', DetectedObject, self.animal_detected_callback)
+        rospy.Subscriber('/detector/sheep', DetectedObject, self.animal_detected_callback)
+        rospy.Subscriber('/detector/cow', DetectedObject, self.animal_detected_callback)
+        rospy.Subscriber('/detector/elephant', DetectedObject, self.animal_detected_callback)
+        rospy.Subscriber('/detector/bear', DetectedObject, self.animal_detected_callback)
+        rospy.Subscriber('/detector/zebra', DetectedObject, self.animal_detected_callback)
+        rospy.Subscriber('/detector/giraffe', DetectedObject, self.animal_detected_callback)
+        
+
         rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.rviz_goal_callback)
-        rospy.Subscriber('/ready_to_rescue', Bool, self.ready_to_rescue_callback)
+        rospy.Subscriber('/rescue_on', Bool, self.rescue_on_callback)
         self.rescue_pub = rospy.Publisher('/ready_to_rescue', Bool, queue_size = 10)
 
         self.trans_listener = tf.TransformListener()
@@ -105,52 +116,74 @@ class Supervisor:
         self.mode = Mode.NAV
 
     def stop_sign_detected_callback(self, msg):
+
         """ callback for when the detector has found a stop sign. Note that
+
         a distance of 0 can mean that the lidar did not pickup the stop sign at all """
 
         # distance of the stop sign
+
         dist = msg.distance
+        theta_sign = (msg.thetaleft + msg.thetaright)/2.0
+        print "STOP SIGN "
 
         # if close enough and in nav mode, stop
         if dist > 0 and dist < STOP_MIN_DIST and self.mode == Mode.NAV:
-            self.init_stop_sign()
+            # self.mode = Mode.STOP_INTERMEDIATE
+            self.x_og_g = self.x_g
+            self.y_og_g = self.y_g
+            self.theta_og_g = self.theta_g
+            delta_d = np.abs(dist*np.cos(theta_sign))
+            theta_sign = theta_sign + self.theta
 
-        print "STOP SIGN "
+            if np.abs(theta_sign) < np.radians(30): #facing forward
+                self.x_g = self.x + delta_d
+                self.y_g = self.y
+                self.theta_g = 0
+
+            elif np.abs(theta_sign) > np.radians(150): #facing back
+                self.x_g = self.x - delta_d
+                self.y_g = self.y
+                self.theta_g = -np.pi
+
+            elif self.theta > 0: #facing left
+                self.x_g = self.x
+                self.y_g = self.y + delta_d
+                self.theta_g = np.pi/2
+
+            else: #facing right
+                self.x_g = self.x
+                self.y_g = self.y - delta_d
+                self.theta_g = -np.pi/2
 
 
-    def cat_detected_callback(self, msg):
-        """ callback for when the detector has found a stop sign. Note that
-        a distance of 0 can mean that the lidar did not pickup the stop sign at all """
+    def animal_detected_callback(self, msg):
 
-        if self.cat_test ==0:
-            print msg
-            self.cat_test = 1
-            dist_cat = msg.distance
-            theta_cat = (msg.thetaleft + msg.thetaright)/2.0
+        theta_animal = (msg.thetaleft + msg.thetaright)/2.0
 
-            x_off = self.x_off
-            y_off = self.y_off
-            th_off = self.th_off
-            x = self.x
-            y = self.y
-            th = self.theta
+        animal_theta = self.theta + theta_animal
+        animal_x = self.x + 20.0*np.cos(animal_theta)
+        animal_y = self.y + 20.0*np.sin(animal_theta)
+        
+        if self.not_close_to_other_animals(animal_x, animal_y) and self.state == State.EXPLORE:
 
-            #### TODO ####
-            # compute h, Hx
-            ##############
-            self.cat_position[2] = th + th_off + theta_cat
-            self.cat_position[0] = x + x_off*np.cos(th) - y_off*np.sin(th) + dist_cat*np.cos(th + th_off + theta_cat)
-            self.cat_position[1] = y + x_off*np.sin(th) + y_off*np.cos(th) + dist_cat*np.cos(th + th_off + theta_cat)
-            # self.trans_broadcaster.sendTransform((self.cat_position[0], self.cat_position[1], 0), tf.transformations.quaternion_from_euler(0, 0, self.cat_position[2]), rospy.Time.now(), '/cat_frame', '/map')
+            animal_positions.append((animal_x, animal_y, animal_theta))
+            '''
+            self.trans_broadcaster.sendTransform((animal_x, animal_y, 0), 
+                                    tf.transformations.quaternion_from_euler(0, 0, self.theta), 
+                                    rospy.Time.now(), '/animal_frame', '/map')
+            '''
+        
 
-            print "CAT HAS ARRIVED"
+        print "Recorded Animal"
 
-    def ready_to_rescue_callback(self, msg):
+
+    def rescue_on_callback(self, msg):
         if self.state == State.PICKUP and self.rescue_bool:
-            self.x_g = self.cat_position[0]
-            self.y_g = self.cat_position[1]
-            self.theta_g = self.cat_position[2]
-            self.state = State.RESCUECAT
+            self.x_g = self.animal_positions[0][0]
+            self.y_g = self.animal_positions[1][0]
+            self.theta_g = self.animal_position[2][0]
+            self.state = State.RESCUE
             self.mode = Mode.NAV
 
     def go_to_pose(self):
@@ -183,7 +216,17 @@ class Supervisor:
         """ checks if the robot is at a pose within some threshold """
 
         return (abs(x-self.x)<POS_EPS and abs(y-self.y)<POS_EPS and abs(theta-self.theta)<THETA_EPS)
+    
+    def not_close_to_other_animals(self, x, y):
+        """ checks if the robot is at a pose within some threshold """
+        for animal_pos in self.animal_positions:
+            
+            if ((animal_pos[0] - x)**2 + (animal_pos[1] -y)**2) < self.ANIMAL_DIST_THRESH:
+                return False
 
+        return True
+
+        return (abs(x-self.x)<POS_EPS and abs(y-self.y)<POS_EPS and abs(theta-self.theta)<THETA_EPS)
     def init_stop_sign(self):
         """ initiates a stop sign maneuver """
 
@@ -247,7 +290,15 @@ class Supervisor:
                 self.init_crossing()
             else:
                 pass
+        elif self.mode == Mode.STOP_INTERMEDIATE:
 
+            if self.close_to(self.x_g,self.y_g,self.theta_g):
+                self.x_g = self.x_og_g
+                self.y_g = self,y_og_g
+                self.theta_g = self.theta_og_g
+                self.mode = Mode.STOP
+            else:
+                self.go_to_pose()
         elif self.mode == Mode.CROSS:
             # crossing an intersection
             if self.has_crossed():
@@ -286,84 +337,4 @@ class Supervisor:
                 # Done going through waypoints
                 if self.pre_explore_index >= len(pre_explore_waypoints):
                     print '---------------- PRE_EXPLORE: done exploring' 
-                    self.state = State.EXPLORE
-
-                # Done going to current waypoint, go to next one
-                else:
-                    print '---------------- PRE_EXPLORE: index', self.pre_explore_index, 'waypoint', pre_explore_waypoints[self.pre_explore_index]
-                    self.x_g, self.y_g, self.theta_g = pre_explore_waypoints[self.pre_explore_index]
-                    self.mode = Mode.NAV
-
-        elif self.state == State.EXPLORE:
-
-            if self.cat_test == 1: #and self.dog_test == 1:
-                self.state = State.PICKUP
-                self.x_g = 0
-                self.y_g = 0
-                self.theta_g = 0
-                self.mode = Mode.NAV
-
-        elif self.state == State.PICKUP:
-
-            if self.mode == Mode.IDLE:
-
-                self.rescue_bool = True
-                rospy.loginfo(self.rescue_bool)
-                self.rescue_pub.publish(self.rescue_bool)
-
-
-        elif self.state == State.RESCUECAT:
-
-            if self.mode == Mode.IDLE:
-                
-                self.state = State.HOME
-                self.x_g = 0
-                self.y_g = 0
-                self.theta_g = 0
-                self.mode = Mode.NAV
-
-        #elif self.state == State.RESCUEDOG:
-
-        elif self.state == State.HOME:
-
-            if self.mode == Mode.IDLE:
-                
-                self.state = State.CELEBRATION
-                self.x_g = 0
-                self.y_g = 0
-                self.theta_g = 0
-                self.mode = Mode.NAV
-
-        elif self.state == State.CELEBRATION:
-            oldTh = self.theta_g
-            self.theta_g = np.pi + oldTh
-            pose_g_msg = Pose2D()
-            pose_g_msg.x = self.x_g
-            pose_g_msg.y = self.y_g
-            pose_g_msg.theta = self.theta_g
-            self.pose_goal_publisher.publish(pose_g_msg)
-            time.sleep(random.randint(1, 5))
-            oldTh = self.theta_g
-            self.theta_g = oldTh - np.pi
-            pose_g_msg = Pose2D()
-            pose_g_msg.x = self.x_g
-            pose_g_msg.y = self.y_g
-            pose_g_msg.theta = self.theta_g
-            self.pose_goal_publisher.publish(pose_g_msg)
-            time.sleep(random.randint(1, 5))
-            self.mode = Mode.CELEBRATION
-
-        else:
-            raise Exception('This state is not supported: %s'
-                % str(self.state))
-
-
-    def run(self):
-        rate = rospy.Rate(10) # 10 Hz
-        while not rospy.is_shutdown():
-            self.loop()
-            rate.sleep()
-
-if __name__ == '__main__':
-    sup = Supervisor()
-    sup.run()
+   ...
