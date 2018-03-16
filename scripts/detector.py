@@ -28,6 +28,8 @@ USE_TF = True
 # minimum score for positive detection
 MIN_SCORE = .5
 
+ANIMAL_LABELS = set(['cat', 'bird', 'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe'])
+
 def load_object_labels(filename):
     """ loads the coco object readable name """
 
@@ -222,7 +224,7 @@ class Detector:
                 xcen = int(0.5*(xmax-xmin)+xmin)
                 ycen = int(0.5*(ymax-ymin)+ymin)
 
-                cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (255,0,0), 2)
+                # cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (255,0,0), 2)
 
                 # computes the vectors in camera frame corresponding to each sides of the box
                 # NOTE: changed these
@@ -243,15 +245,25 @@ class Detector:
 
                 # NOTE: estimating distance from pixels => real world coordinates
                 world_scaling = 0
+                # Cat
                 if self.object_labels[cl] == 'cat':
-                    print 'cat'
+                    print self.object_labels[cl]
                     world_scaling = CAT_HEIGHT_WORLD
+                    cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (0,255,0), 2)
+                # Stop sign
                 elif self.object_labels[cl] == 'stop_sign':
-                    world_scaling = STOP_SIGN_HEIGHT_WORLD
-                dist = world_scaling / np.abs(rayright[1]-rayleft[1])
-
-                if self.object_labels[cl] == 'stop_sign':
+                    cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (0,0,255), 2)
                     print 'stop sign:', dist
+                    world_scaling = STOP_SIGN_HEIGHT_WORLD
+                # Any other animal
+                elif self.object_labels[cl] in ANIMAL_LABELS:
+                    cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (0,255,0), 2)
+                # Any other object
+                else:
+                    cv2.rectangle(img_bgr8, (xmin,ymin), (xmax,ymax), (255,0,0), 2)
+
+                # Distance estimate
+                dist = world_scaling / np.abs(rayright[1]-rayleft[1])
 
                 if not self.object_publishers.has_key(cl):
                     self.object_publishers[cl] = rospy.Publisher('/detector/'+self.object_labels[cl],
