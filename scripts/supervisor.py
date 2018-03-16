@@ -365,7 +365,7 @@ class Supervisor:
                     self.mode = Mode.NAV
 
         elif self.state == State.EXPLORE:
-
+            pass
             # if len(self.animal_positions) == self.NUM_ANIMALS:
             #     self.state = State.PICKUP
             #     self.x_g = 0
